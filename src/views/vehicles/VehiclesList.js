@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
+import Collapse from '@mui/material/Collapse';
 import Table from '@mui/material/Table';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
@@ -8,17 +9,30 @@ import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TablePagination from '@mui/material/TablePagination';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
+import Chip from '@mui/material/Chip';
 import { useTheme } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import RegisterVehicleModal from 'src/layouts/components/RegisterVehicleModal';
+import dayjs from 'dayjs';
+
+const statusObj = {
+  Desmedido: { color: 'error' },
+  Sospechoso: { color: 'warning' },
+  Regular: { color: 'success' },
+  Indeterminado: { color: 'secondary' },
+};
 
 function TablePaginationActions(props) {
   const theme = useTheme();
@@ -81,13 +95,144 @@ TablePaginationActions.propTypes = {
   rowsPerPage: PropTypes.number.isRequired,
 };
 
+function Row(props) {
+  const { row } = props;
+  const [open, setOpen] = React.useState(false);
+  const [vehicleDetails, setVehicleDetails] = React.useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  const fetchVehicleDetails = (vehicleCode) => {
+    fetch(`http://localhost:3001/api/vehicle-details/${vehicleCode}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length > 0) {
+          setVehicleDetails(data);
+        } else {
+          setVehicleDetails([]);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching vehicle details:', error);
+        setVehicleDetails([]);
+      });
+  };
+
+  const handleExpandClick = () => {
+    if (!open) {
+      fetchVehicleDetails(row.placa);
+    }
+    setOpen(!open);
+  };
+
+  const handleOpenModal = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedVehicle(null);
+  };
+
+  return (
+    <React.Fragment>
+      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+        <TableCell>
+          <IconButton aria-label="expand row" size="small" onClick={handleExpandClick}>
+            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+          </IconButton>
+        </TableCell>
+        <TableCell>{row.placa}</TableCell>
+        <TableCell>{row.descripcion}</TableCell>
+        <TableCell>{row.horometraje}</TableCell>
+        <TableCell>{row.kilometraje}</TableCell>
+        <TableCell>{row.consumProm}</TableCell>
+        <TableCell>{row.maxConsum}</TableCell>
+        <TableCell>{row.minConsum}</TableCell>
+        <TableCell>
+          <IconButton onClick={() => handleOpenModal(row)}>
+            <EditIcon />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
+          <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box sx={{ margin: 1 }}>
+              <Typography variant="h6" gutterBottom component="div">
+                Detalle de Consumos
+              </Typography>
+              <Table size="small" aria-label="vehicle details">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Fecha Despacho</TableCell>
+                    <TableCell>Horometraje</TableCell>
+                    <TableCell>Kilometraje</TableCell>
+                    <TableCell>Galones</TableCell>
+                    <TableCell>Estado</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {vehicleDetails.length > 0 ? vehicleDetails.map((detail) => (
+                    <TableRow key={detail.id} >
+                      <TableCell>{dayjs(detail.fechaDespacho).format('DD-MM-YYYY')}</TableCell>
+                      <TableCell>{detail.horometraje}</TableCell>
+                      <TableCell>{detail.kilometraje}</TableCell>
+                      <TableCell>{detail.galones}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={detail.mensajeEstado}
+                          color={statusObj[detail.mensajeEstado]?.color || 'default'}
+                          sx={{
+                            height: 24,
+                            fontSize: '0.75rem',
+                            textTransform: 'capitalize',
+                            '& .MuiChip-label': { fontWeight: 500 },
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">No hay consumos</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
+      {selectedVehicle && (
+        <RegisterVehicleModal
+          open={modalOpen}
+          handleClose={handleCloseModal}
+          vehicle={selectedVehicle}
+        />
+      )}
+    </React.Fragment>
+  );
+}
+
+Row.propTypes = {
+  row: PropTypes.shape({
+    placa: PropTypes.string.isRequired,
+    descripcion: PropTypes.string.isRequired,
+    horometraje: PropTypes.number.isRequired,
+    kilometraje: PropTypes.number.isRequired,
+    consumProm: PropTypes.number.isRequired,
+    maxConsum: PropTypes.number.isRequired,
+    minConsum: PropTypes.number.isRequired,
+  }).isRequired,
+};
+
 export default function VehiclesList() {
   const [vehiclesList, setVehiclesList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(7);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
+
 
   useEffect(() => {
     fetch('http://localhost:3001/api/vehicles', {
@@ -107,31 +252,22 @@ export default function VehiclesList() {
     setPage(0);
   };
 
-  const handleOpenModal = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setModalOpen(true);
-  };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedVehicle(null);
-  };
+
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const filteredVehiclesList = vehiclesList.filter(vehicle =>
-    vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.marca.toLowerCase().includes(searchTerm.toLowerCase())  ||
-    vehicle.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredVehicles = vehiclesList.filter(vehicle =>
+    vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - vehiclesList.length) : 0;
+  const emptyRows =
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredVehicles.length) : 0;
 
   return (
-    <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ padding: 2 }}>
         <TextField
           size='small'
@@ -148,39 +284,24 @@ export default function VehiclesList() {
           onChange={handleSearchChange}
         />
       </Box>
-      <TableContainer sx={{ flex: 1, overflow: 'auto', minHeight: 500 }}>
-        <Table sx={{ minWidth: 800 }} aria-label='vehicle table'>
+      <TableContainer component={Paper} sx={{ minHeight: 550, width: "100%" }}>
+        <Table aria-label="vehicles table">
           <TableHead>
             <TableRow>
-              <TableCell>Código</TableCell>
+              <TableCell />
+              <TableCell>Placa</TableCell>
               <TableCell>Descripción</TableCell>
               <TableCell>Horometraje</TableCell>
               <TableCell>Kilometraje</TableCell>
-              <TableCell>Consumo Prom.</TableCell>
-              <TableCell>Consumo Máx.</TableCell>
-              <TableCell>Consumo Min.</TableCell>
+              <TableCell>Consumo Promedio</TableCell>
+              <TableCell>Consumo Máximo</TableCell>
+              <TableCell>Consumo Mínimo</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {(rowsPerPage > 0
-              ? filteredVehiclesList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : filteredVehiclesList
-            ).map((row) => (
-              <TableRow hover key={row.placa} sx={{ '&:last-of-type td, &:last-of-type th': { border: 0 } }}>
-                <TableCell>{row.placa}</TableCell>
-                <TableCell>{row.descripcion}</TableCell>
-                <TableCell>{row.horometraje}</TableCell>
-                <TableCell>{row.kilometraje}</TableCell>
-                <TableCell>{row.consumProm}</TableCell>
-                <TableCell>{row.maxConsum}</TableCell>
-                <TableCell>{row.minConsum}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleOpenModal(row)}>
-                    <EditIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+            {filteredVehicles.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(vehicle => (
+              <Row key={vehicle.placa} row={vehicle} />
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
@@ -191,7 +312,7 @@ export default function VehiclesList() {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={5}
         component="div"
         count={vehiclesList.length}
         rowsPerPage={rowsPerPage}
@@ -200,13 +321,6 @@ export default function VehiclesList() {
         onRowsPerPageChange={handleChangeRowsPerPage}
         ActionsComponent={TablePaginationActions}
       />
-      {selectedVehicle && (
-        <RegisterVehicleModal
-          open={modalOpen}
-          handleClose={handleCloseModal}
-          vehicle={selectedVehicle}
-        />
-      )}
     </Box>
   );
 }

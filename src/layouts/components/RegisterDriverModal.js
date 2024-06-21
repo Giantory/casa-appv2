@@ -16,6 +16,8 @@ const RegisterOperatorModal = ({ open, handleClose, driver }) => {
     telefono: '',
   });
 
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
     if (driver) {
       setFormData(driver);
@@ -30,7 +32,26 @@ const RegisterOperatorModal = ({ open, handleClose, driver }) => {
     }));
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.numLicencia) newErrors.numLicencia = 'El número de licencia es obligatorio';
+    if (!formData.nombres) newErrors.nombres = 'Los nombres son obligatorios';
+    if (!formData.apellidos) newErrors.apellidos = 'Los apellidos son obligatorios';
+    if (!formData.telefono) {
+      newErrors.telefono = 'El teléfono es obligatorio';
+    } else if (!/^\d+$/.test(formData.telefono)) {
+      newErrors.telefono = 'El teléfono debe contener solo números';
+    }
+    return newErrors;
+  };
+
   const handleSubmit = () => {
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     const url = driver ? `http://localhost:3001/api/drivers/${driver.idOperador}` : 'http://localhost:3001/api/drivers';
     const method = driver ? 'PUT' : 'POST';
 
@@ -53,22 +74,14 @@ const RegisterOperatorModal = ({ open, handleClose, driver }) => {
       <DialogContent>
         <TextField
           margin="dense"
-          label="ID Operador"
-          type="text"
-          fullWidth
-          name="idOperador"
-          value={formData.idOperador}
-          onChange={handleChange}
-          disabled={!!driver} // Disable the field if updating
-        />
-        <TextField
-          margin="dense"
           label="Número de Licencia"
           type="text"
           fullWidth
           name="numLicencia"
           value={formData.numLicencia}
           onChange={handleChange}
+          error={!!errors.numLicencia}
+          helperText={errors.numLicencia}
         />
         <TextField
           margin="dense"
@@ -78,6 +91,8 @@ const RegisterOperatorModal = ({ open, handleClose, driver }) => {
           name="nombres"
           value={formData.nombres}
           onChange={handleChange}
+          error={!!errors.nombres}
+          helperText={errors.nombres}
         />
         <TextField
           margin="dense"
@@ -87,6 +102,8 @@ const RegisterOperatorModal = ({ open, handleClose, driver }) => {
           name="apellidos"
           value={formData.apellidos}
           onChange={handleChange}
+          error={!!errors.apellidos}
+          helperText={errors.apellidos}
         />
         <TextField
           margin="dense"
@@ -96,6 +113,8 @@ const RegisterOperatorModal = ({ open, handleClose, driver }) => {
           name="telefono"
           value={formData.telefono}
           onChange={handleChange}
+          error={!!errors.telefono}
+          helperText={errors.telefono}
         />
       </DialogContent>
       <DialogActions>

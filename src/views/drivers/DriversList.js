@@ -107,6 +107,16 @@ export default function DriversList() {
     setPage(0);
   };
 
+  const handleOpenModal = (driver) => {
+    setSelectedDriver(driver);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedDriver(null);
+  };
+
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
@@ -143,7 +153,6 @@ export default function DriversList() {
         <Table sx={{ minWidth: 800 }} aria-label='drivers table'>
           <TableHead>
             <TableRow>
-              <TableCell>ID Operador</TableCell>
               <TableCell>Número de Licencia</TableCell>
               <TableCell>Nombres</TableCell>
               <TableCell>Apellidos</TableCell>
@@ -157,7 +166,6 @@ export default function DriversList() {
               : filteredDriversList
             ).map((row) => (
               <TableRow hover key={row.idOperador} sx={{ '&:last-of-type td, &:last-of-type th': { border: 0 } }}>
-                <TableCell>{row.idOperador}</TableCell>
                 <TableCell>{row.numLicencia}</TableCell>
                 <TableCell>{row.nombres}</TableCell>
                 <TableCell>{row.apellidos}</TableCell>
@@ -178,9 +186,9 @@ export default function DriversList() {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={5}
         component="div"
-        count={filteredDriversList.length}
+        count={driversList.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

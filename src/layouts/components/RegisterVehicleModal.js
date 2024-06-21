@@ -17,6 +17,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
     minConsum: '',
   });
 
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
     if (vehicle) {
       setFormData(vehicle);
@@ -31,7 +33,25 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
     }));
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.placa) newErrors.placa = 'La placa es obligatoria';
+    if (!formData.descripcion) newErrors.descripcion = 'La descripción es obligatoria';
+    if (!formData.horometraje || isNaN(formData.horometraje)) newErrors.horometraje = 'El horometraje debe ser un número';
+    if (!formData.kilometraje || isNaN(formData.kilometraje)) newErrors.kilometraje = 'El kilometraje debe ser un número';
+    if (!formData.consumProm || isNaN(formData.consumProm)) newErrors.consumProm = 'El consumo promedio debe ser un número';
+    if (!formData.maxConsum || isNaN(formData.maxConsum)) newErrors.maxConsum = 'El consumo máximo debe ser un número';
+    if (!formData.minConsum || isNaN(formData.minConsum)) newErrors.minConsum = 'El consumo mínimo debe ser un número';
+    return newErrors;
+  };
+
   const handleSubmit = () => {
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     const url = vehicle ? `http://localhost:3001/api/vehicles/${vehicle.placa}` : 'http://localhost:3001/api/vehicles';
     const method = vehicle ? 'PUT' : 'POST';
 
@@ -60,6 +80,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="placa"
           value={formData.placa}
           onChange={handleChange}
+          error={!!errors.placa}
+          helperText={errors.placa}
           disabled={!!vehicle} // Disable the field if updating
         />
         <TextField
@@ -70,6 +92,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="descripcion"
           value={formData.descripcion}
           onChange={handleChange}
+          error={!!errors.descripcion}
+          helperText={errors.descripcion}
         />
         <TextField
           margin="dense"
@@ -79,6 +103,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="horometraje"
           value={formData.horometraje}
           onChange={handleChange}
+          error={!!errors.horometraje}
+          helperText={errors.horometraje}
         />
         <TextField
           margin="dense"
@@ -88,6 +114,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="kilometraje"
           value={formData.kilometraje}
           onChange={handleChange}
+          error={!!errors.kilometraje}
+          helperText={errors.kilometraje}
         />
         <TextField
           margin="dense"
@@ -97,6 +125,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="consumProm"
           value={formData.consumProm}
           onChange={handleChange}
+          error={!!errors.consumProm}
+          helperText={errors.consumProm}
         />
         <TextField
           margin="dense"
@@ -106,6 +136,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="maxConsum"
           value={formData.maxConsum}
           onChange={handleChange}
+          error={!!errors.maxConsum}
+          helperText={errors.maxConsum}
         />
         <TextField
           margin="dense"
@@ -115,6 +147,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           name="minConsum"
           value={formData.minConsum}
           onChange={handleChange}
+          error={!!errors.minConsum}
+          helperText={errors.minConsum}
         />
       </DialogContent>
       <DialogActions>

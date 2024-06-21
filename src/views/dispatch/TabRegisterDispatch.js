@@ -125,6 +125,7 @@ const TabRegisterDispatch = () => {
             return;
         }
         setOpenDrawer(open);
+        setSelectedVehicle(null);
     };
 
     const handleSave = () => {
