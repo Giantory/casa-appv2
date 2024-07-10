@@ -136,10 +136,19 @@ const TabRegisterDispatch = () => {
                 status: 'error'
             });
         } else {
-            setOpenDispatchForm(true);
+            const hasNewVehicle = vehiclesListConsum.some(vehicle => vehicle.estadoCodigo === 6);
+            if (hasNewVehicle) {
+                setSnackbarState({
+                    open: true,
+                    message: 'Registre el vehículo nuevo antes de guardar',
+                    status: 'error'
+                });
+            } else {
+                setOpenDispatchForm(true);
+            }
         }
     };
-
+    
     const handleCleanExcelFile = () => {
         setExcelFile(null);
         setNameExcelFile(null);

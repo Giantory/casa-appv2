@@ -1,8 +1,8 @@
-// ** Next Imports
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-
-// ** MUI Imports
+import List from '@mui/material/List'
+import Collapse from '@mui/material/Collapse'
 import Chip from '@mui/material/Chip'
 import ListItem from '@mui/material/ListItem'
 import { styled } from '@mui/material/styles'
@@ -10,17 +10,12 @@ import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemButton from '@mui/material/ListItemButton'
-
-// ** Configs Import
-import themeConfig from 'src/configs/themeConfig'
-
-// ** Custom Components Imports
+import ExpandLess from '@mui/icons-material/ExpandLess'
+import ExpandMore from '@mui/icons-material/ExpandMore'
 import UserIcon from 'src/layouts/components/UserIcon'
-
-// ** Utils
+import themeConfig from 'src/configs/themeConfig'
 import { handleURLQueries } from 'src/@core/layouts/utils'
 
-// ** Styled Components
 const MenuNavLink = styled(ListItemButton)(({ theme }) => ({
   width: '100%',
   borderTopRightRadius: 100,
@@ -47,9 +42,22 @@ const MenuItemTextMetaWrapper = styled(Box)({
 })
 
 const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }) => {
-  // ** Hooks
+  const [open, setOpen] = useState(false)
   const router = useRouter()
   const IconTag = item.icon
+
+  const handleClick = () => {
+    if (item.children) {
+      setOpen(!open)
+    } else {
+      if (navVisible) {
+        toggleNavVisibility()
+      }
+      if (item.path) {
+        router.push(item.path)
+      }
+    }
+  }
 
   const isNavLinkActive = () => {
     if (router.pathname === item.path || handleURLQueries(router, item.path)) {
@@ -60,26 +68,17 @@ const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }) => {
   }
 
   return (
-    <ListItem
-      disablePadding
-      className='nav-link'
-      disabled={item.disabled || false}
-      sx={{ mt: 1.5, px: '0 !important' }}
-    >
-      <Link passHref href={item.path === undefined ? '/' : `${item.path}`}>
+    <>
+      <ListItem
+        disablePadding
+        className='nav-link'
+        disabled={item.disabled || false}
+        sx={{ mt: 1.5, px: '0 !important' }}
+        onClick={handleClick}
+      >
         <MenuNavLink
-          component={'a'}
+          component={'div'}
           className={isNavLinkActive() ? 'active' : ''}
-          {...(item.openInNewTab ? { target: '_blank' } : null)}
-          onClick={e => {
-            if (item.path === undefined) {
-              e.preventDefault()
-              e.stopPropagation()
-            }
-            if (navVisible) {
-              toggleNavVisibility()
-            }
-          }}
           sx={{
             pl: 5.5,
             ...(item.disabled ? { pointerEvents: 'none' } : { cursor: 'pointer' })
@@ -92,7 +91,7 @@ const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }) => {
               transition: 'margin .25s ease-in-out'
             }}
           >
-            <UserIcon icon={IconTag} />
+            {IconTag && <UserIcon icon={IconTag} />}
           </ListItemIcon>
 
           <MenuItemTextMetaWrapper>
@@ -109,10 +108,20 @@ const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }) => {
                 }}
               />
             ) : null}
+            {item.children ? open ? <ExpandLess /> : <ExpandMore /> : null}
           </MenuItemTextMetaWrapper>
         </MenuNavLink>
-      </Link>
-    </ListItem>
+      </ListItem>
+      {item.children && (
+        <Collapse in={open} timeout='auto' unmountOnExit>
+          <List component='div' disablePadding>
+            {item.children.map((child, index) => (
+              <VerticalNavLink key={index} item={child} navVisible={navVisible} toggleNavVisibility={toggleNavVisibility} />
+            ))}
+          </List>
+        </Collapse>
+      )}
+    </>
   )
 }
 

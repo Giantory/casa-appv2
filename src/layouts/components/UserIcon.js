@@ -1,15 +1,13 @@
-const UserIcon = props => {
-  // ** Props
-  const { icon, iconProps } = props
-  const IconTag = icon
-  let styles
+import React from 'react'
 
-  /* styles = {
-      color: 'red',
-      fontSize: '2rem'
-    } */
-  // @ts-ignore
-  return <IconTag {...iconProps} style={{ ...styles }} />
+const UserIcon = props => {
+  const { icon: IconTag, iconProps } = props
+
+  if (!IconTag) {
+    return null
+  }
+
+  return <IconTag {...iconProps} />
 }
 
 export default UserIcon

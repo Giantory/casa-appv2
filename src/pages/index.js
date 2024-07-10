@@ -1,103 +1,76 @@
+import { useEffect, useState } from 'react';
 // ** MUI Imports
 import Grid from '@mui/material/Grid'
 
-// ** Icons Imports
-import Poll from 'mdi-material-ui/Poll'
-import CurrencyUsd from 'mdi-material-ui/CurrencyUsd'
-import HelpCircleOutline from 'mdi-material-ui/HelpCircleOutline'
-import BriefcaseVariantOutline from 'mdi-material-ui/BriefcaseVariantOutline'
-
-// ** Custom Components Imports
-import CardStatisticsVerticalComponent from 'src/@core/components/card-statistics/card-stats-vertical'
 
 // ** Styled Component Import
 import ApexChartWrapper from 'src/@core/styles/libs/react-apexcharts'
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import InfoCard from 'src/views/dashboard/InfoCard';
+import ErrorIcon from '@mui/icons-material/Error';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import XRGraph from 'src/views/dashboard/XRGraph';
 
-// ** Demo Components Imports
-import Table from 'src/views/dashboard/Table'
-import Trophy from 'src/views/dashboard/Trophy'
-import TotalEarning from 'src/views/dashboard/TotalEarning'
-import StatisticsCard from 'src/views/dashboard/StatisticsCard'
-import WeeklyOverview from 'src/views/dashboard/WeeklyOverview'
-import DepositWithdraw from 'src/views/dashboard/DepositWithdraw'
-import SalesByCountries from 'src/views/dashboard/SalesByCountries'
-// import CategoriesChart from 'src/views/dispatch/CategoriesChart'
-// import TankReferenceChart from 'src/views/dispatch/TankReferenceChart'
-import RecentConsumChart from 'src/views/vehicles/RecentConsumChart'
 const Dashboard = () => {
+
+  const [vehiclesCounter, setVehiclesCounter] = useState({});
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/vehiles/vehiclesAmount', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then(res => res.json())
+      .then(response => setVehiclesCounter(response[0]));
+  }, []);
+
+  console.log(vehiclesCounter)
   return (
     <ApexChartWrapper>
       <Grid container spacing={6}>
-        {/* <Grid item xs={12} md={4}>
-          <CategoriesChart />
-          <TankReferenceChart />
+        <Grid item xs={3} md={3}>
+          <InfoCard
+            icon={<LocalShippingIcon />}
+            value={vehiclesCounter.total_vehiculos}
+            description="Vehículos existentes"
+            percentage={vehiclesCounter.vehiculos_recientes}
+            color="primary"
+          />
+        </Grid>
+        <Grid item xs={3} md={3}>
+          <InfoCard
+            icon={<ErrorIcon />}
+            value="23"
+            description="Consumos irregulares"
+            percentage="5"
+            color="warning"
+          />
+        </Grid>
+        <Grid item xs={3} md={3}>
+          <InfoCard
+            icon={<LocalShippingIcon />}
+            value={vehiclesCounter.total_vehiculos}
+            description="Vehículos existentes"
+            percentage={vehiclesCounter.vehiculos_recientes}
+            color="primary"
+          />
+        </Grid>
+        <Grid item xs={3} md={3}>
+          <InfoCard
+            icon={<PersonRemoveIcon />}
+            value="17"
+            description="Conductores observados"
+            percentage="1"
+            color="error"
+          />
+        </Grid>
+        <Grid item xs={12} md={12}>
+          <XRGraph />
+        </Grid>
 
-        </Grid> */}
-        <Grid item xs={12} md={8}>
-          <RecentConsumChart />
-        </Grid>
-        {/* <Grid item xs={12} md={6} lg={4}>
-          <TankReferenceChart />
-        </Grid>
-        <Grid item xs={12} md={6} lg={4}>
-          <CategoriesChart />
 
-        </Grid> */}
-        {/* <Grid item xs={12} md={6} lg={4}>
-          <Grid container spacing={6}>
-            <Grid item xs={6}>
-              <CardStatisticsVerticalComponent
-                stats='$25.6k'
-                icon={<Poll />}
-                color='success'
-                trendNumber='+42%'
-                title='Total Profit'
-                subtitle='Weekly Profit'
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <CardStatisticsVerticalComponent
-                stats='$78'
-                title='Refunds'
-                trend='negative'
-                color='secondary'
-                trendNumber='-15%'
-                subtitle='Past Month'
-                icon={<CurrencyUsd />}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <CardStatisticsVerticalComponent
-                stats='862'
-                trend='negative'
-                trendNumber='-18%'
-                title='New Project'
-                subtitle='Yearly Project'
-                icon={<BriefcaseVariantOutline />}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <CardStatisticsVerticalComponent
-                stats='15'
-                color='warning'
-                trend='negative'
-                trendNumber='-18%'
-                subtitle='Last Week'
-                title='Sales Queries'
-                icon={<HelpCircleOutline />}
-              />
-            </Grid>
-          </Grid>
-        </Grid> */}
-        {/* <Grid item xs={12} md={6} lg={4}>
-          <SalesByCountries />
-        </Grid>
-        <Grid item xs={12} md={12} lg={8}>
-          <DepositWithdraw />
-        </Grid>
-        <Grid item xs={12}>
-          <Table />
-        </Grid> */}
+
+
       </Grid>
     </ApexChartWrapper>
   )

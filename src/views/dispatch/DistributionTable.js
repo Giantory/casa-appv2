@@ -20,15 +20,18 @@ import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import MessageIcon from '@mui/icons-material/Message';
 import Tooltip from '@mui/material/Tooltip';
+import Button from '@mui/material/Button';
 
 // Context
 import { vehiclesConsumContext } from './TabRegisterDispatch';
+import RegisterVehicleModal from 'src/layouts/components/RegisterVehicleModal';
 
 const statusObj = {
   Desmedido: { color: 'error' },
   Sospechoso: { color: 'warning' },
   Regular: { color: 'success' },
   Indeterminado: { color: 'secondary' },
+  Nuevo: { color: 'info' },
 };
 
 function TablePaginationActions(props) {
@@ -93,12 +96,14 @@ TablePaginationActions.propTypes = {
 };
 
 export default function DistributionTable() {
-  const { vehiclesListConsum } = useContext(vehiclesConsumContext);
+  const { vehiclesListConsum, setVehiclesListConsum } = useContext(vehiclesConsumContext);
   console.log(vehiclesListConsum)
   const theme = useTheme();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(9);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -108,6 +113,37 @@ export default function DistributionTable() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  const handleOpenModal = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedVehicle(null);
+    setModalOpen(false);
+  };
+
+  const handleSaveVehicle = (savedVehicle, additionalData) => {
+    console.log(savedVehicle);
+    console.log('Datos adicionales:', additionalData);
+  
+    setVehiclesListConsum((prevList) =>
+      prevList.map((vehicle) =>
+        vehicle.placa == savedVehicle.placa
+          ? {
+              ...vehicle,
+              equipo: savedVehicle.descripcion,
+              marca: additionalData.marca,
+              modelo: additionalData.modelo,
+              estadoDescripcion: 'Indeterminado',
+              mensaje: 'No se pudieron calcular las diferencias de horómetro y/o kilómetro'
+            }
+          : vehicle
+      )
+    );
+  };
+  
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - vehiclesListConsum.length) : 0;
 
@@ -125,6 +161,7 @@ export default function DistributionTable() {
               <TableCell>Kilometraje</TableCell>
               <TableCell>Galones</TableCell>
               <TableCell>Rendimiento</TableCell>
+              <TableCell>Operador</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Mensaje</TableCell>
             </TableRow>
@@ -145,6 +182,7 @@ export default function DistributionTable() {
                 <TableCell>{row.kilometraje}</TableCell>
                 <TableCell>{row.galones}</TableCell>
                 <TableCell>{row.rendimiento}</TableCell>
+                <TableCell>{row.operador}</TableCell>
                 <TableCell>
                   <Chip
                     label={row.estadoDescripcion}
@@ -154,7 +192,9 @@ export default function DistributionTable() {
                       fontSize: '0.75rem',
                       textTransform: 'capitalize',
                       '& .MuiChip-label': { fontWeight: 500 },
+                      cursor: row.estadoDescripcion === 'Nuevo' ? 'pointer' : 'default'
                     }}
+                    onClick={row.estadoDescripcion === 'Nuevo' ? () => handleOpenModal(row) : null}
                   />
                 </TableCell>
                 <TableCell sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -166,7 +206,7 @@ export default function DistributionTable() {
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={9} />
+                <TableCell colSpan={11} />
               </TableRow>
             )}
           </TableBody>
@@ -181,6 +221,13 @@ export default function DistributionTable() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         ActionsComponent={TablePaginationActions}
+      />
+      <RegisterVehicleModal
+        open={modalOpen}
+        handleClose={handleCloseModal}
+        vehicle={selectedVehicle}
+        isNew={true}  // Indica que es un nuevo registro
+        onSave={handleSaveVehicle}  // Pasa la función para manejar la actualización de la lista
       />
     </Box>
   );

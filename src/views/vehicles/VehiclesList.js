@@ -9,8 +9,8 @@ import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TablePagination from '@mui/material/TablePagination';
-import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
@@ -19,12 +19,11 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import EditIcon from '@mui/icons-material/Edit';
-import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 import Chip from '@mui/material/Chip';
 import { useTheme } from '@mui/material';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
 import RegisterVehicleModal from 'src/layouts/components/RegisterVehicleModal';
+import RegisterConsumptionModal from './RegisterConsumptionModal';
 import dayjs from 'dayjs';
 
 const statusObj = {
@@ -96,10 +95,11 @@ TablePaginationActions.propTypes = {
 };
 
 function Row(props) {
-  const { row } = props;
+  const { row, onAddConsumption } = props;
   const [open, setOpen] = React.useState(false);
   const [vehicleDetails, setVehicleDetails] = React.useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalAddConsumOpen, setModalAddConsumOpen] = useState(false);
+  const [modalAddVehicleOpen, setModalAddVehicleOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   const fetchVehicleDetails = (vehicleCode) => {
@@ -125,14 +125,28 @@ function Row(props) {
     setOpen(!open);
   };
 
-  const handleOpenModal = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setModalOpen(true);
+  const handleOpenAddConsumModal = () => {
+    setSelectedVehicle(row.placa);
+    setModalAddConsumOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
+  const handleCloseAddConsumModal = () => {
+    setModalAddConsumOpen(false);
     setSelectedVehicle(null);
+  };
+
+  const handleOpenRegisterVehicleModal = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setModalAddVehicleOpen(true);
+  };
+
+  const handleCloseRegisterVehicleModal = () => {
+    setModalAddVehicleOpen(false);
+    setSelectedVehicle(null);
+  };
+
+  const handleSaveNewConsum = (newConsumption) => {
+    onAddConsumption(selectedVehicle, newConsumption);
   };
 
   return (
@@ -151,66 +165,87 @@ function Row(props) {
         <TableCell>{row.maxConsum}</TableCell>
         <TableCell>{row.minConsum}</TableCell>
         <TableCell>
-          <IconButton onClick={() => handleOpenModal(row)}>
+          <IconButton onClick={() => handleOpenRegisterVehicleModal(row)}>
             <EditIcon />
           </IconButton>
         </TableCell>
       </TableRow>
       <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ margin: 1 }}>
-              <Typography variant="h6" gutterBottom component="div">
-                Detalle de Consumos
-              </Typography>
-              <Table size="small" aria-label="vehicle details">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Fecha Despacho</TableCell>
-                    <TableCell>Horometraje</TableCell>
-                    <TableCell>Kilometraje</TableCell>
-                    <TableCell>Galones</TableCell>
-                    <TableCell>Estado</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {vehicleDetails.length > 0 ? vehicleDetails.map((detail) => (
-                    <TableRow key={detail.id} >
-                      <TableCell>{dayjs(detail.fechaDespacho).format('DD-MM-YYYY')}</TableCell>
-                      <TableCell>{detail.horometraje}</TableCell>
-                      <TableCell>{detail.kilometraje}</TableCell>
-                      <TableCell>{detail.galones}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={detail.mensajeEstado}
-                          color={statusObj[detail.mensajeEstado]?.color || 'default'}
-                          sx={{
-                            height: 24,
-                            fontSize: '0.75rem',
-                            textTransform: 'capitalize',
-                            '& .MuiChip-label': { fontWeight: 500 },
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )) : (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">No hay consumos</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
-      {selectedVehicle && (
-        <RegisterVehicleModal
-          open={modalOpen}
-          handleClose={handleCloseModal}
+  <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={9}>
+    <Collapse in={open} timeout="auto" unmountOnExit>
+      <Box sx={{ margin: 1, textAlign: 'center', width: '100%' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Typography variant="h6" gutterBottom component="div">
+            Detalle de Consumos
+          </Typography>
+          <IconButton
+            aria-label="add consumption"
+            size="small"
+            onClick={handleOpenAddConsumModal}
+            sx={{ alignItems: 'flex-start' }}
+          >
+            <AddIcon />
+          </IconButton>
+        </Box>
+        <Table size="small" aria-label="vehicle details" sx={{ width: '100%' }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Fecha Despacho</TableCell>
+              <TableCell>Horometraje</TableCell>
+              <TableCell>Kilometraje</TableCell>
+              <TableCell>Galones</TableCell>
+              <TableCell>Estado</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {vehicleDetails.length > 0 ? vehicleDetails.map((detail) => (
+              <TableRow key={detail.id} >
+                <TableCell>{dayjs(detail.fechaDespacho).format('DD-MM-YYYY')}</TableCell>
+                <TableCell>{detail.horometraje}</TableCell>
+                <TableCell>{detail.kilometraje}</TableCell>
+                <TableCell>{detail.galones}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={detail.mensajeEstado}
+                    color={statusObj[detail.mensajeEstado]?.color || 'default'}
+                    sx={{
+                      height: 24,
+                      fontSize: '0.75rem',
+                      textTransform: 'capitalize',
+                      '& .MuiChip-label': { fontWeight: 500 },
+                    }}
+                  />
+                </TableCell>
+              </TableRow>
+            )) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">No hay consumos</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Box>
+    </Collapse>
+  </TableCell>
+</TableRow>
+
+      {modalAddConsumOpen && (
+        <RegisterConsumptionModal
+          open={modalAddConsumOpen}
+          handleClose={handleCloseAddConsumModal}
+          handleSave={handleSaveNewConsum}
           vehicle={selectedVehicle}
         />
       )}
+      {
+        modalAddVehicleOpen && (
+          <RegisterVehicleModal
+            open={modalAddVehicleOpen}
+            handleClose={handleCloseRegisterVehicleModal}
+            vehicle={selectedVehicle}
+          />
+        )
+      }
     </React.Fragment>
   );
 }
@@ -225,14 +260,13 @@ Row.propTypes = {
     maxConsum: PropTypes.number.isRequired,
     minConsum: PropTypes.number.isRequired,
   }).isRequired,
+  onAddConsumption: PropTypes.func.isRequired,
 };
 
-export default function VehiclesList() {
+export default function VehiclesList({ role, plan, status, searchTerm }) {
   const [vehiclesList, setVehiclesList] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(7);
-
 
   useEffect(() => {
     fetch('http://localhost:3001/api/vehicles', {
@@ -252,38 +286,26 @@ export default function VehiclesList() {
     setPage(0);
   };
 
-
-
-
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+  const handleAddConsumption = (placa, newConsumption) => {
+    // Aquí puedes manejar la lógica para añadir el nuevo consumo a la lista de vehículos.
+    console.log('Añadir consumo para:', placa, newConsumption);
+    // Aquí puedes actualizar la lista de vehículos o enviar la información al backend.
   };
 
-  const filteredVehicles = vehiclesList.filter(vehicle =>
-    vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredVehicles = vehiclesList.filter(vehicle => {
+    const matchesRole = role ? vehicle.role === role : true;
+    const matchesPlan = plan ? vehicle.plan === plan : true;
+    const matchesStatus = status ? vehicle.status === status : true;
+    const matchesSearch = vehicle.placa.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesRole && matchesPlan && matchesStatus && matchesSearch;
+  });
 
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredVehicles.length) : 0;
 
   return (
     <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ padding: 2 }}>
-        <TextField
-          size='small'
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-          placeholder="Buscar"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position='start'>
-                <SearchIcon fontSize='small' />
-              </InputAdornment>
-            ),
-          }}
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-      </Box>
       <TableContainer component={Paper} sx={{ minHeight: 550, width: "100%" }}>
         <Table aria-label="vehicles table">
           <TableHead>
@@ -301,20 +323,20 @@ export default function VehiclesList() {
           </TableHead>
           <TableBody>
             {filteredVehicles.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(vehicle => (
-              <Row key={vehicle.placa} row={vehicle} />
+              <Row key={vehicle.placa} row={vehicle} onAddConsumption={handleAddConsumption} />
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={8} />
+                <TableCell colSpan={9} />
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={5}
+        rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={vehiclesList.length}
+        count={filteredVehicles.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
@@ -324,3 +346,10 @@ export default function VehiclesList() {
     </Box>
   );
 }
+
+VehiclesList.propTypes = {
+  role: PropTypes.string,
+  plan: PropTypes.string,
+  status: PropTypes.string,
+  searchTerm: PropTypes.string,
+};

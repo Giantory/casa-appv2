@@ -10,6 +10,8 @@ const AddVehicleForm = ({ selectedVehicle, onClose }) => {
     const [horometraje, setHorometraje] = useState('');
     const [kilometraje, setKilometraje] = useState('');
     const [galones, setGalones] = useState('');
+    const [operador, setOperador] = useState('');
+
 
 
     const handleSubmit = () => {
@@ -17,7 +19,8 @@ const AddVehicleForm = ({ selectedVehicle, onClose }) => {
             ...selectedVehicle,
             horometraje,
             kilometraje,
-            galones
+            galones,
+            operador
         };
         fetch('http://localhost:3001/api/consums/processConsum', {
             method: 'POST',
@@ -26,27 +29,36 @@ const AddVehicleForm = ({ selectedVehicle, onClose }) => {
                 placa: newVehicle.placa,
                 horometraje: parseFloat(newVehicle.horometraje),
                 kilometraje: parseFloat(newVehicle.kilometraje),
-                galones: parseFloat(newVehicle.galones)
+                galones: parseFloat(newVehicle.galones),
+                operador: newVehicle.operador
             }),
         }).then(res => {
             return res.json();
         }).then(response => {
-            if (!response[0]) {
+            if (response.error) {
                 setSnackbarState({
                     open: true,
-                    message: 'Error al procesar',
+                    message: response.error === 'Problema en los datos retornados' ? response.data.mensaje : 'Error al procesar',
                     status: 'error'
-                })
+                });
+                console.error('Error response:', response);
             } else {
-                setVehiclesListConsum([...vehiclesListConsum, response[0]]);
+                setVehiclesListConsum([...vehiclesListConsum, response]);
                 setSnackbarState({
                     open: true,
                     message: 'Procesado con éxito',
                     status: 'success'
-                })
+                });
                 onClose();
             }
-        })
+        }).catch(error => {
+            console.error('Fetch error:', error);
+            setSnackbarState({
+                open: true,
+                message: 'Error al procesar',
+                status: 'error'
+            });
+        });
     };
 
     return (

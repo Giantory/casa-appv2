@@ -5,25 +5,64 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 
-const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
-  const [formData, setFormData] = useState({
+const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => {
+  const initialFormData = {
     placa: '',
     descripcion: '',
     horometraje: '',
     kilometraje: '',
-    consumProm: '',
-    maxConsum: '',
-    minConsum: '',
-  });
+    idMarca: 0,
+    idModelo: 0,
+  };
 
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
+  const [brands, setBrands] = useState([]);
+  const [models, setModels] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
 
   useEffect(() => {
-    if (vehicle) {
+    if (vehicle && isNew) {
+      setFormData({
+        ...initialFormData,
+        placa: vehicle.placa,
+        horometraje: vehicle.horometraje,
+        kilometraje: vehicle.kilometraje,
+      });
+    } else if (vehicle && !isNew) {
       setFormData(vehicle);
+    } else {
+      setFormData(initialFormData);
     }
-  }, [vehicle]);
+  }, [vehicle, isNew]);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/brands')
+      .then(response => response.json())
+      .then(data => {
+        const uniqueBrands = Array.from(new Set(data.map(item => ({
+          id: item.idMarca,
+          name: item.descripcion.trim()
+        }))));
+        setBrands(uniqueBrands);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (formData.idMarca) {
+      fetch(`http://localhost:3001/api/models/${formData.idMarca}`)
+        .then(response => response.json())
+        .then(data => {
+          setModels(data);
+        });
+    }
+  }, [formData.idMarca]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,6 +70,17 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
       ...prevData,
       [name]: value,
     }));
+
+    // Actualizar los nombres de marca y modelo seleccionados
+    if (name === 'idMarca') {
+      const brand = brands.find(brand => brand.id === parseInt(value));
+      setSelectedBrand(brand ? brand.name : '');
+    }
+
+    if (name === 'idModelo') {
+      const model = models.find(model => model.idModelo === parseInt(value));
+      setSelectedModel(model ? model.descripcion.trim() : '');
+    }
   };
 
   const validate = () => {
@@ -39,9 +89,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
     if (!formData.descripcion) newErrors.descripcion = 'La descripción es obligatoria';
     if (!formData.horometraje || isNaN(formData.horometraje)) newErrors.horometraje = 'El horometraje debe ser un número';
     if (!formData.kilometraje || isNaN(formData.kilometraje)) newErrors.kilometraje = 'El kilometraje debe ser un número';
-    if (!formData.consumProm || isNaN(formData.consumProm)) newErrors.consumProm = 'El consumo promedio debe ser un número';
-    if (!formData.maxConsum || isNaN(formData.maxConsum)) newErrors.maxConsum = 'El consumo máximo debe ser un número';
-    if (!formData.minConsum || isNaN(formData.minConsum)) newErrors.minConsum = 'El consumo mínimo debe ser un número';
+    if (!formData.idMarca) newErrors.idMarca = 'La marca es obligatoria';
+    if (!formData.idModelo) newErrors.idModelo = 'El modelo es obligatorio';
     return newErrors;
   };
 
@@ -52,8 +101,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
       return;
     }
 
-    const url = vehicle ? `http://localhost:3001/api/vehicles/${vehicle.placa}` : 'http://localhost:3001/api/vehicles';
-    const method = vehicle ? 'PUT' : 'POST';
+    const url = isNew ? 'http://localhost:3001/api/vehicles' : `http://localhost:3001/api/vehicles/${vehicle.placa}`;
+    const method = isNew ? 'POST' : 'PUT';
 
     fetch(url, {
       method: method,
@@ -63,14 +112,25 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
       body: JSON.stringify(formData),
     })
       .then((response) => response.json())
-      .then(() => {
+      .then((savedVehicle) => {
         handleClose();
+        setFormData(initialFormData);  // Limpia el formulario
+        setErrors({});                 // Limpia los errores
+        // Llama a la función onSave para actualizar la lista de vehículos
+        onSave(formData, { marca: selectedBrand, modelo: selectedModel });
       });
   };
 
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>{vehicle ? 'Actualizar Vehículo' : 'Registrar Vehículo'}</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={() => {
+        handleClose();
+        setFormData(initialFormData);  // Limpia el formulario al cerrar el modal
+        setErrors({});                 // Limpia los errores al cerrar el modal
+      }}
+    >
+      <DialogTitle>{isNew ? 'Registrar Vehículo' : 'Actualizar Vehículo'}</DialogTitle>
       <DialogContent>
         <TextField
           margin="dense"
@@ -82,7 +142,7 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           onChange={handleChange}
           error={!!errors.placa}
           helperText={errors.placa}
-          disabled={!!vehicle} // Disable the field if updating
+          disabled={!isNew} // Disable the field if updating
         />
         <TextField
           margin="dense"
@@ -117,42 +177,44 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle }) => {
           error={!!errors.kilometraje}
           helperText={errors.kilometraje}
         />
-        <TextField
-          margin="dense"
-          label="Consumo Prom."
-          type="text"
-          fullWidth
-          name="consumProm"
-          value={formData.consumProm}
-          onChange={handleChange}
-          error={!!errors.consumProm}
-          helperText={errors.consumProm}
-        />
-        <TextField
-          margin="dense"
-          label="Consumo Máx."
-          type="text"
-          fullWidth
-          name="maxConsum"
-          value={formData.maxConsum}
-          onChange={handleChange}
-          error={!!errors.maxConsum}
-          helperText={errors.maxConsum}
-        />
-        <TextField
-          margin="dense"
-          label="Consumo Min."
-          type="text"
-          fullWidth
-          name="minConsum"
-          value={formData.minConsum}
-          onChange={handleChange}
-          error={!!errors.minConsum}
-          helperText={errors.minConsum}
-        />
+        <FormControl fullWidth margin="dense">
+          <Select
+            labelId="idMarca-label"
+            name="idMarca"
+            value={formData.idMarca}
+            onChange={handleChange}
+            error={!!errors.idMarca}
+          >
+            <MenuItem value={0}>Selecciona marca</MenuItem>
+            {brands.map((brand) => (
+              <MenuItem key={brand.id} value={brand.id}>{brand.name}</MenuItem>
+            ))}
+          </Select>
+          {errors.idMarca && <p style={{ color: 'red' }}>{errors.idMarca}</p>}
+        </FormControl>
+        <FormControl fullWidth margin="dense">
+          <Select
+            labelId="idModelo-label"
+            name="idModelo"
+            value={formData.idModelo}
+            onChange={handleChange}
+            error={!!errors.idModelo}
+            disabled={!formData.idMarca}
+          >
+            <MenuItem value={0}>Selecciona modelo</MenuItem>
+            {models.map(model => (
+              <MenuItem key={model.idModelo} value={model.idModelo}>{model.descripcion.trim()}</MenuItem>
+            ))}
+          </Select>
+          {errors.idModelo && <p style={{ color: 'red' }}>{errors.idModelo}</p>}
+        </FormControl>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="primary">
+        <Button onClick={() => {
+          handleClose();
+          setFormData(initialFormData);  // Limpia el formulario al cerrar el modal
+          setErrors({});                 // Limpia los errores al cerrar el modal
+        }} color="primary">
           Cancelar
         </Button>
         <Button onClick={handleSubmit} color="primary" variant="contained">
