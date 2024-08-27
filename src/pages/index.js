@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 // ** MUI Imports
 import Grid from '@mui/material/Grid'
 
@@ -24,7 +25,6 @@ const Dashboard = () => {
       .then(response => setVehiclesCounter(response[0]));
   }, []);
 
-  console.log(vehiclesCounter)
   return (
     <ApexChartWrapper>
       <Grid container spacing={6}>

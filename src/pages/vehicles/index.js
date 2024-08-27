@@ -17,6 +17,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
 
 export const ProfileDriverContext = createContext({});
+
 export const CategoryContext = createContext({});
 
 const Vehicles = () => {
