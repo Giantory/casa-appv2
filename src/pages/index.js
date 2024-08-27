@@ -58,7 +58,7 @@ const Dashboard = () => {
         <Grid item xs={3} md={3}>
           <InfoCard
             icon={<PersonRemoveIcon />}
-            value="17"
+            value="19"
             description="Conductores observados"
             percentage="1"
             color="error"
