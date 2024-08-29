@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -10,7 +10,10 @@ import Select from '@mui/material/Select';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 
-const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => {
+import { SnackbarContext } from 'src/layouts/UserLayout';
+
+
+const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew }) => {
   const initialFormData = {
     placa: '',
     descripcion: '',
@@ -26,6 +29,9 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
   const [models, setModels] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
+
+  const { snackbarState, setSnackbarState } = useContext(SnackbarContext)
+
 
   useEffect(() => {
     if (vehicle && isNew) {
@@ -87,8 +93,8 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
     const newErrors = {};
     if (!formData.placa) newErrors.placa = 'La placa es obligatoria';
     if (!formData.descripcion) newErrors.descripcion = 'La descripción es obligatoria';
-    if (!formData.horometraje || isNaN(formData.horometraje)) newErrors.horometraje = 'El horometraje debe ser un número';
-    if (!formData.kilometraje || isNaN(formData.kilometraje)) newErrors.kilometraje = 'El kilometraje debe ser un número';
+    if (formData.horometraje && isNaN(formData.horometraje)) newErrors.horometraje = 'El horometraje debe ser un número';
+    if (formData.kilometraje && isNaN(formData.kilometraje)) newErrors.kilometraje = 'El kilometraje debe ser un número';
     if (!formData.idMarca) newErrors.idMarca = 'La marca es obligatoria';
     if (!formData.idModelo) newErrors.idModelo = 'El modelo es obligatorio';
     return newErrors;
@@ -112,13 +118,36 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
       body: JSON.stringify(formData),
     })
       .then((response) => response.json())
-      .then((savedVehicle) => {
-        handleClose();
-        setFormData(initialFormData);  // Limpia el formulario
-        setErrors({});                 // Limpia los errores
-        // Llama a la función onSave para actualizar la lista de vehículos
-        onSave(formData, { marca: selectedBrand, modelo: selectedModel });
+      .then((response) => {
+        const { message, results } = response;
+
+        // Verificamos si `changedRows` o `affectedRows` es mayor a 0
+        if (results.changedRows > 0 || results.affectedRows > 0) {
+          setSnackbarState({
+            open: true,
+            message: message || 'Actualizado con éxito',
+            status: 'success',
+          });
+          handleClose();
+          setFormData(initialFormData); // Limpia el formulario
+          setErrors({}); // Limpia los errores
+        } else {
+          setSnackbarState({
+            open: true,
+            message: 'No se realizaron cambios',
+            status: 'info',
+          });
+        }
+      })
+      .catch((error) => {
+        setSnackbarState({
+          open: true,
+          message: 'Error en la solicitud',
+          status: 'error',
+        });
+        console.error('Error:', error);
       });
+
   };
 
   return (
@@ -142,7 +171,6 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
           onChange={handleChange}
           error={!!errors.placa}
           helperText={errors.placa}
-          disabled={!isNew} // Disable the field if updating
         />
         <TextField
           margin="dense"

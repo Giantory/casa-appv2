@@ -243,6 +243,7 @@ function Row(props) {
             open={modalAddVehicleOpen}
             handleClose={handleCloseRegisterVehicleModal}
             vehicle={selectedVehicle}
+            // onSave={handleVehicleSave} // Pasa la función como prop
           />
         )
       }
