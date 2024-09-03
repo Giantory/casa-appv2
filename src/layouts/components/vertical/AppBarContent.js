@@ -131,7 +131,7 @@ const AppBarContent = props => {
               ))}
             </Menu>
             <RegisterOperatorModal open={openOperatorModal} handleClose={handleCloseOperatorModal} />
-            <RegisterVehicleModal open={openVehicleModal} handleClose={handleCloseVehicleModal} />
+            <RegisterVehicleModal open={openVehicleModal} handleClose={handleCloseVehicleModal} isNew={true} />
           </Box>
         </Toolbar>
         {/* <DistributionForm showModal={{ openModal, setOpenModal }} /> */}

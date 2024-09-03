@@ -12,7 +12,8 @@ import InputLabel from '@mui/material/InputLabel';
 
 import { SnackbarContext } from 'src/layouts/UserLayout';
 
-const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => {
+
+const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew }) => {
   const initialFormData = {
     placa: '',
     descripcion: '',
@@ -30,6 +31,7 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
   const [selectedModel, setSelectedModel] = useState('');
 
   const { snackbarState, setSnackbarState } = useContext(SnackbarContext)
+
 
   useEffect(() => {
     if (vehicle && isNew) {
@@ -60,7 +62,7 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
 
   useEffect(() => {
     if (formData.idMarca) {
-      fetch(`http://localhost:3001/api/models/${formData.idMarca}`)
+      fetch(http://localhost:3001/api/models/${formData.idMarca})
         .then(response => response.json())
         .then(data => {
           setModels(data);
@@ -91,16 +93,12 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
     const newErrors = {};
     if (!formData.placa) newErrors.placa = 'La placa es obligatoria';
     if (!formData.descripcion) newErrors.descripcion = 'La descripción es obligatoria';
-
-    // Verifica si el campo está vacío (cadena vacía) antes de verificar si es un número
-    if (formData.horometraje === '' || isNaN(formData.horometraje)) newErrors.horometraje = 'El horometraje debe ser un número';
-    if (formData.kilometraje === '' || isNaN(formData.kilometraje)) newErrors.kilometraje = 'El kilometraje debe ser un número';
-
+    if (formData.horometraje && isNaN(formData.horometraje)) newErrors.horometraje = 'El horometraje debe ser un número';
+    if (formData.kilometraje && isNaN(formData.kilometraje)) newErrors.kilometraje = 'El kilometraje debe ser un número';
     if (!formData.idMarca) newErrors.idMarca = 'La marca es obligatoria';
     if (!formData.idModelo) newErrors.idModelo = 'El modelo es obligatorio';
     return newErrors;
   };
-
 
   const handleSubmit = () => {
     const newErrors = validate();
@@ -109,7 +107,7 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
       return;
     }
 
-    const url = isNew ? 'http://localhost:3001/api/vehicles' : `http://localhost:3001/api/vehicles/${vehicle.placa}`;
+    const url = isNew ? 'http://localhost:3001/api/vehicles' : http://localhost:3001/api/vehicles/${vehicle.placa};
     const method = isNew ? 'POST' : 'PUT';
 
     fetch(url, {
@@ -119,38 +117,38 @@ const RegisterVehicleModal = ({ open, handleClose, vehicle, isNew, onSave }) => 
       },
       body: JSON.stringify(formData),
     })
+      .then((response) => response.json())
       .then((response) => {
-        if (response.ok) {  // Verifica si el status es 200 OK
-          return response.json();
-        }
-        throw new Error('Error en la solicitud');
-      })
-      .then((response) => {
-        setSnackbarState({
-          open: true,
-          message: 'Operación realizada con éxito',
-          status: 'success',
-        });
-        handleClose();
-        setFormData(initialFormData);
-        setErrors({});
+        const { message, results } = response;
 
-        // Verifica si onSave existe antes de llamarlo
-        if (onSave) {
-          onSave(formData, { marca: selectedBrand, modelo: selectedModel });
+        // Verificamos si changedRows o affectedRows es mayor a 0
+        if (results.changedRows > 0 || results.affectedRows > 0) {
+          setSnackbarState({
+            open: true,
+            message: message || 'Actualizado con éxito',
+            status: 'success',
+          });
+          handleClose();
+          setFormData(initialFormData); // Limpia el formulario
+          setErrors({}); // Limpia los errores
+        } else {
+          setSnackbarState({
+            open: true,
+            message: 'No se realizaron cambios',
+            status: 'info',
+          });
         }
-
       })
       .catch((error) => {
         setSnackbarState({
           open: true,
-          message: error.message || 'Error en la solicitud',
+          message: 'Error en la solicitud',
           status: 'error',
         });
         console.error('Error:', error);
       });
-  };
 
+  };
 
   return (
     <Dialog

@@ -227,7 +227,7 @@ export default function DistributionTable() {
         handleClose={handleCloseModal}
         vehicle={selectedVehicle}
         isNew={true}  // Indica que es un nuevo registro
-        // onSave={handleSaveVehicle}  // Pasa la función para manejar la actualización de la lista
+        onSave={handleSaveVehicle}  // Pasa la función para manejar la actualización de la lista
       />
     </Box>
   );
