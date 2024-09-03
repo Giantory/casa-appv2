@@ -124,26 +124,34 @@ export default function DistributionTable() {
     setModalOpen(false);
   };
 
+
   const handleSaveVehicle = (savedVehicle, additionalData) => {
     console.log(savedVehicle);
     console.log('Datos adicionales:', additionalData);
-  
-    setVehiclesListConsum((prevList) =>
-      prevList.map((vehicle) =>
+
+    setVehiclesListConsum((prevList) => {
+      const updatedList = prevList.map((vehicle) =>
         vehicle.placa == savedVehicle.placa
           ? {
-              ...vehicle,
-              equipo: savedVehicle.descripcion,
-              marca: additionalData.marca,
-              modelo: additionalData.modelo,
-              estadoDescripcion: 'Indeterminado',
-              mensaje: 'No se pudieron calcular las diferencias de horómetro y/o kilómetro'
-            }
+            ...vehicle,
+            equipo: savedVehicle.descripcion,
+            marca: additionalData.marca,
+            modelo: additionalData.modelo,
+            estadoCodigo: 4,
+            estadoDescripcion: 'Indeterminado',
+            mensaje: 'No se pudieron calcular las diferencias de horómetro y/o kilómetro'
+          }
           : vehicle
-      )
-    );
+      );
+
+      // Este es el paso clave para asegurarte de que el estado se actualice correctamente.
+
+      return updatedList; // Retorna la lista actualizada para que React actualice el estado local.
+    });
   };
-  
+
+
+
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - vehiclesListConsum.length) : 0;
 

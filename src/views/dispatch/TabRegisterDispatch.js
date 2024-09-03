@@ -64,6 +64,7 @@ const TabRegisterDispatch = () => {
     }, [vehiclesListConsum]);
 
     const updateVehiclesListConsum = (newList) => {
+        console.log(newList)
         setVehiclesListConsum(newList);
         localStorage.setItem('vehiclesListConsum', JSON.stringify(newList));
     };
@@ -137,6 +138,7 @@ const TabRegisterDispatch = () => {
             });
         } else {
             const hasNewVehicle = vehiclesListConsum.some(vehicle => vehicle.estadoCodigo === 6);
+            console.log("list:",vehiclesListConsum)
             if (hasNewVehicle) {
                 setSnackbarState({
                     open: true,
@@ -148,7 +150,7 @@ const TabRegisterDispatch = () => {
             }
         }
     };
-    
+
     const handleCleanExcelFile = () => {
         setExcelFile(null);
         setNameExcelFile(null);
