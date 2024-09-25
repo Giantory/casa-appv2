@@ -114,6 +114,7 @@ function Row(props) {
                                         <TableCell align="right">Horometraje Después</TableCell>
                                         <TableCell align="right">Kilometraje Anterior</TableCell>
                                         <TableCell align="right">Kilometraje Después</TableCell>
+                                        <TableCell align="right">Rendimiento</TableCell>
                                         <TableCell align="right">Galones</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -125,6 +126,7 @@ function Row(props) {
                                             <TableCell align="right">{detalleRow.horometraje}</TableCell>
                                             <TableCell align="right">{detalleRow.inKilometraje}</TableCell>
                                             <TableCell align="right">{detalleRow.kilometraje}</TableCell>
+                                            <TableCell align="right">{detalleRow.rendimiento}</TableCell>
                                             <TableCell align="right">{detalleRow.galones}</TableCell>
                                         </TableRow>
                                     ))}
@@ -152,6 +154,7 @@ Row.propTypes = {
                 horometraje: PropTypes.number.isRequired,
                 inKilometraje: PropTypes.number.isRequired,
                 kilometraje: PropTypes.number.isRequired,
+                rendimiento: PropTypes.number.isRequired,
                 galones: PropTypes.number.isRequired,
             }),
         ).isRequired,
@@ -181,6 +184,7 @@ export default function CustomPaginationActionsTable() {
                                 horometraje: current.horometraje,
                                 inKilometraje: current.inKilometraje,
                                 kilometraje: current.kilometraje,
+                                rendimiento: current.rendimiento,
                                 galones: current.galones,
                             });
                             existingDispatch.totalGalones += current.galones;
@@ -198,6 +202,7 @@ export default function CustomPaginationActionsTable() {
                                     horometraje: current.horometraje,
                                     inKilometraje: current.inKilometraje,
                                     kilometraje: current.kilometraje,
+                                    rendimiento: current.rendimiento,
                                     galones: current.galones,
                                 }],
                             });

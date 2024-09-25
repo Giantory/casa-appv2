@@ -194,6 +194,7 @@ function Row(props) {
               <TableCell>Horometraje</TableCell>
               <TableCell>Kilometraje</TableCell>
               <TableCell>Galones</TableCell>
+              <TableCell>Rendimiento</TableCell>
               <TableCell>Estado</TableCell>
             </TableRow>
           </TableHead>
@@ -204,6 +205,7 @@ function Row(props) {
                 <TableCell>{detail.horometraje}</TableCell>
                 <TableCell>{detail.kilometraje}</TableCell>
                 <TableCell>{detail.galones}</TableCell>
+                <TableCell>{detail.rendimiento}</TableCell>
                 <TableCell>
                   <Chip
                     label={detail.mensajeEstado}
